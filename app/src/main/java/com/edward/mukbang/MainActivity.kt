@@ -16,9 +16,11 @@ import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.model.PlaceLikelihood
 import com.google.android.libraries.places.api.net.FindCurrentPlaceRequest
+import com.google.android.youtube.player.YouTubePlayerFragment
+import com.google.android.youtube.player.YouTubePlayerSupportFragment
 import java.util.*
 
-class MainActivity : AppCompatActivity(), OnMapReadyCallback {
+class MainActivity : AppCompatActivity(), OnMapReadyCallback, VideoInfoWindowAdapter.OnVideoClickedListener {
     private lateinit var map: GoogleMap
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
@@ -81,20 +83,26 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private fun populateMap() {
         showCurrentLocation()
-        findNearbyRestaurants(completion = { nearbyRestaurants ->
+        getNearbyRestaurants(completion = { nearbyRestaurants ->
             for (nearbyRestaurant in nearbyRestaurants) {
-                map.addMarker(
+                val marker = map.addMarker(
                     MarkerOptions()
                         .title(nearbyRestaurant.name)
                         .position(nearbyRestaurant.latLng!!)
                 )
+                marker?.tag = nearbyRestaurant
             }
         })
-        map.setInfoWindowAdapter(VideoInfoWindowAdapter(this))
+        map.setInfoWindowAdapter(VideoInfoWindowAdapter(this, this))
+    }
+
+    override fun onVideoClicked(video: YoutubeVideo) {
+//        val youtubePlayerFragment = YouTubePlayerSupportFragment.newInstance()
+//        supportFragmentManager.beginTransaction().add(R.id.fragment_container, youtubePlayerFragment).commit()
     }
 
     @SuppressLint("MissingPermission")
-    private fun findNearbyRestaurants(completion: (List<Place>) -> Unit) {
+    private fun getNearbyRestaurants(completion: (List<Place>) -> Unit) {
         val placesClient = Places.createClient(this)
         val placeResponse = placesClient.findCurrentPlace(nearbyPlacesRequest())
         placeResponse.addOnCompleteListener { task ->
@@ -125,7 +133,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 Place.Field.LAT_LNG,
                 Place.Field.NAME,
                 Place.Field.RATING,
-                Place.Field.TYPES
+                Place.Field.TYPES,
+                Place.Field.ADDRESS
             )
         )
     }
@@ -134,4 +143,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         val LOG_TAG = MainActivity.javaClass.simpleName
         const val LOC_PERM_REQ_CODE = 100
     }
+
+
 }
