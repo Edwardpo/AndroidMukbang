@@ -57,10 +57,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun enableLocation() {
-        if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
             populateMap()
-        }
-        else {
+        } else {
             requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), LOC_PERM_REQ_CODE)
         }
     }
@@ -71,20 +74,23 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if(requestCode == LOC_PERM_REQ_CODE && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        if (requestCode == LOC_PERM_REQ_CODE && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             populateMap()
         }
     }
 
     private fun populateMap() {
         showCurrentLocation()
-        findNearbyRestaurants(completion = {nearbyRestaurants ->
-            for(nearbyRestaurant in nearbyRestaurants) {
-                map.addMarker(MarkerOptions()
-                    .title(nearbyRestaurant.name)
-                    .position(nearbyRestaurant.latLng!!))
+        findNearbyRestaurants(completion = { nearbyRestaurants ->
+            for (nearbyRestaurant in nearbyRestaurants) {
+                map.addMarker(
+                    MarkerOptions()
+                        .title(nearbyRestaurant.name)
+                        .position(nearbyRestaurant.latLng!!)
+                )
             }
         })
+        map.setInfoWindowAdapter(VideoInfoWindowAdapter(this))
     }
 
     @SuppressLint("MissingPermission")
@@ -93,18 +99,17 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         val placeResponse = placesClient.findCurrentPlace(nearbyPlacesRequest())
         placeResponse.addOnCompleteListener { task ->
             val restaurants = ArrayList<Place>()
-            if(task.isSuccessful) {
+            if (task.isSuccessful) {
                 val response = task.result
-                for(placeLikelihood : PlaceLikelihood in response.placeLikelihoods) {
+                for (placeLikelihood: PlaceLikelihood in response.placeLikelihoods) {
                     placeLikelihood.place.types?.let { placeTypes ->
-                        if(placeTypes.contains(Place.Type.FOOD) || placeTypes.contains(Place.Type.RESTAURANT)) {
+                        if (placeTypes.contains(Place.Type.FOOD) || placeTypes.contains(Place.Type.RESTAURANT)) {
                             restaurants.add(placeLikelihood.place)
                         }
                     }
                 }
                 completion(restaurants)
-            }
-            else {
+            } else {
                 val exception = task.exception
                 Log.e(LOG_TAG, "Place not found: $exception")
                 completion(restaurants)
@@ -114,7 +119,15 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun nearbyPlacesRequest(): FindCurrentPlaceRequest {
-        return FindCurrentPlaceRequest.newInstance(listOf(Place.Field.ID, Place.Field.LAT_LNG, Place.Field.NAME, Place.Field.RATING,Place.Field.TYPES))
+        return FindCurrentPlaceRequest.newInstance(
+            listOf(
+                Place.Field.ID,
+                Place.Field.LAT_LNG,
+                Place.Field.NAME,
+                Place.Field.RATING,
+                Place.Field.TYPES
+            )
+        )
     }
 
     companion object {
