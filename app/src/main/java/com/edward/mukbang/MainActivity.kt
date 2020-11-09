@@ -2,9 +2,11 @@ package com.edward.mukbang
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -16,11 +18,10 @@ import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.model.PlaceLikelihood
 import com.google.android.libraries.places.api.net.FindCurrentPlaceRequest
-import com.google.android.youtube.player.YouTubePlayerFragment
-import com.google.android.youtube.player.YouTubePlayerSupportFragment
+import com.google.android.youtube.player.*
 import java.util.*
 
-class MainActivity : AppCompatActivity(), OnMapReadyCallback, VideoInfoWindowAdapter.OnVideoClickedListener {
+class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var map: GoogleMap
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
@@ -93,12 +94,17 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, VideoInfoWindowAda
                 marker?.tag = nearbyRestaurant
             }
         })
-        map.setInfoWindowAdapter(VideoInfoWindowAdapter(this, this))
+        map.setInfoWindowAdapter(VideoInfoWindowAdapter(this))
+        map.setOnInfoWindowClickListener { marker ->
+            // TODO: Save the location in shared prefs with key as restaurant name + address
+            // The values will be a set of videoIds
+            showVideo(marker.tag as YoutubeVideo)
+        }
     }
 
-    override fun onVideoClicked(video: YoutubeVideo) {
-//        val youtubePlayerFragment = YouTubePlayerSupportFragment.newInstance()
-//        supportFragmentManager.beginTransaction().add(R.id.fragment_container, youtubePlayerFragment).commit()
+    private fun showVideo(video: YoutubeVideo){
+        val intent = YouTubeStandalonePlayer.createVideoIntent(this, getString(R.string.youtube_api_key), video.videoId)
+        startActivity(intent)
     }
 
     @SuppressLint("MissingPermission")
